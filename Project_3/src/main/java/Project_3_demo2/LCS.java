@@ -1,3 +1,5 @@
+package Project_3_demo2;
+
 public class LCS{
 	// calculates the longest common subsequence
 	public int lcsCalculator(String[] sequence){

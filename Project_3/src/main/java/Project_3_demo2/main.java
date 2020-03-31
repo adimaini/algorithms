@@ -1,5 +1,6 @@
-import java.util.Random;
+package Project_3_demo2;
 
+import java.util.Random;
 
 public class main{
 	public static void main(String[] args) {
