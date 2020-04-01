@@ -1,4 +1,4 @@
-package Project_3_demo2;
+package Project_3;
 
 public class LCS{
 	// calculates the longest common subsequence

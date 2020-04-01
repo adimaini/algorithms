@@ -1,8 +1,11 @@
-package Project_3_demo2;
+package Project_3;
 
 import java.util.Random;
 
 public class main{
+	
+	public static int n = 5000;
+	
 	public static void main(String[] args) {
 		// keep track of elapsed time of program. initialize startTime. 
 		long startTime = System.nanoTime();
@@ -23,8 +26,8 @@ public class main{
 
 	// generates the two sequences to be used
 	public String[] sequenceGenerator(){
-		int n = 5000;
 
+		
 		int leftLimit = 97; // letter 'a'
 	    int rightLimit = 122; // letter 'z'
 	    int targetStringLength = n;
