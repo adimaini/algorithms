@@ -3,34 +3,54 @@ A demonstration of a quantum coin toss challenge on the IBM Q
 written by Marcus Edwards on November 20, 2018
 '''
 
-from qiskit import IBMQ
+from qiskit import IBMQ, QuantumCircuit, execute, Aer
 import csv
 import random
 
 API_TOKEN = '7f744419bf02c5ad2935c5bad2d858f150f3793da866268cd5c0841bc531c8a72a4484d4c59bf3afa44c29e7859a875cf0634104707aa341424b662acd7c4655'
-heads_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nx q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
-tails_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
+# heads_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nx q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
+# tails_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
 
-def test_api_auth_token():
-    '''
-    Authentication with Quantum Experience Platform
-    '''
-    api = IBMQ.enable_account(API_TOKEN)
-    credential = api.check_credentials()
+simulator = Aer.get_backend('qasm_simulator')
+heads_circuit = QuantumCircuit(1,1)
+tails_circuit = QuantumCircuit(1,1)
 
-    return credential
+#  heads circuit config
+heads_circuit.h(0)
+heads_circuit.x(0)
+heads_circuit.h(0)
+heads_circuit.measure(range(1), range(1))
 
-def connect():
-    '''
-    Attempt to connect to the Quantum Experience Platform
-    ''' 
-    connection_success = test_api_auth_token()
+#  tails circuit config
+tails_circuit.h(0)
+tails_circuit.h(0)
+tails_circuit.measure(range(1), range(1))
 
-    if(connection_success == True):
-        print("API auth success.")
-    else:
-        print("API auth failure.")
-        exit()
+
+
+# heads_result = heads_job.result()
+# tails_result = tails_job.result()
+
+# def test_api_auth_token():
+#     '''
+#     Authentication with Quantum Experience Platform
+#     '''
+#     api = IBMQ.enable_account(API_TOKEN)
+#     credential = api.check_credentials()
+
+#     return credential
+
+# def connect():
+#     '''
+#     Attempt to connect to the Quantum Experience Platform
+#     ''' 
+#     connection_success = test_api_auth_token()
+
+#     if(connection_success == True):
+#         print("API auth success.")
+#     else:
+#         print("API auth failure.")
+#         exit()
 
 def print_results(exp):
     '''
@@ -95,18 +115,21 @@ def run_challenge(trials, flipped, device):
     '''
     heads = 0
     tails = 0
-    api = IBMQ.enable_account(API_TOKEN)
+    # api = IBMQ.load_account(API_TOKEN)
     
     for trial in range(trials):
         if (flipped and random_toss() == True):
             tails += 1
         else:
             heads += 1
-            
-    exp_heads = api.run_experiment(heads_qasm, device, heads)
-    exp_tails = api.run_experiment(tails_qasm, device, tails)
 
-    return exp_heads, exp_tails, heads, tails
+    heads_job = execute(heads_circuit, simulator, shots=heads).result().get_counts(heads_circuit)
+    tails_job = execute(tails_circuit, simulator, shots=tails).result().get_counts(tails_circuit)
+            
+    # exp_heads = api.execute(heads_qasm, device, heads)
+    # exp_tails = api.execute(tails_qasm, device, tails)
+
+    return heads_job, tails_job, heads, tails
 
 def get_choices(file):
     flip = 0
@@ -127,6 +150,8 @@ flips, passes = get_choices('flip_choices.csv')
 print('{0} people chose to flip.'.format(flips))
 
 exp_heads, exp_tails, heads, tails = run_challenge(flips, flipped=True, device='ibmqx4') #run protocol for each flip
+
+print(exp_heads, '\n\n', exp_tails)
 
 p_heads = heads/(heads+tails)
 p_tails = tails/(heads+tails)
