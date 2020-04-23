@@ -3,11 +3,11 @@ A demonstration of a quantum coin toss challenge on the IBM Q
 written by Marcus Edwards on November 20, 2018
 '''
 
-from IBMQuantumExperience import IBMQuantumExperience 
+from qiskit import IBMQ
 import csv
 import random
 
-API_TOKEN = 'a0f9090f4b9b0a7f86cb31848730654bb4dbc35aab364a7d728162c96b264752d413b88daea7303c87f12e0a719345119c0f8a880a27d73b998887664a989fce'
+API_TOKEN = '7f744419bf02c5ad2935c5bad2d858f150f3793da866268cd5c0841bc531c8a72a4484d4c59bf3afa44c29e7859a875cf0634104707aa341424b662acd7c4655'
 heads_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nx q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
 tails_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
 
@@ -15,7 +15,7 @@ def test_api_auth_token():
     '''
     Authentication with Quantum Experience Platform
     '''
-    api = IBMQuantumExperience(API_TOKEN)
+    api = IBMQ.enable_account(API_TOKEN)
     credential = api.check_credentials()
 
     return credential
@@ -95,7 +95,7 @@ def run_challenge(trials, flipped, device):
     '''
     heads = 0
     tails = 0
-    api = IBMQuantumExperience(API_TOKEN)
+    api = IBMQ.enable_account(API_TOKEN)
     
     for trial in range(trials):
         if (flipped and random_toss() == True):
@@ -120,7 +120,7 @@ def get_choices(file):
                 dont_flip += 1
     return flip, dont_flip
     
-connect() #connect to IBM Q
+# connect() #connect to IBM Q
 
 flips, passes = get_choices('flip_choices.csv')
 
