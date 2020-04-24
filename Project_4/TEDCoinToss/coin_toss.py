@@ -154,11 +154,12 @@ def get_choices(file):
 
 flips, passes = get_choices('flip_choices.csv')
 
+print('{0} people are playing a game against IBMs quantum computer.'.format(flips + passes))
 print('{0} people chose to flip.'.format(flips))
 
 exp_heads, exp_tails, heads, tails = run_challenge(flips, flipped=True, device='ibmqx4') #run protocol for each flip
 
-print(exp_heads, '\n\n', exp_tails)
+# print(exp_heads, '\n\n', exp_tails)
 
 p_heads = heads/(heads+tails)
 p_tails = tails/(heads+tails)
@@ -166,28 +167,33 @@ p_tails = tails/(heads+tails)
 print('{0} people who flipped got heads.'.format(heads))
 print('{0} people who flipped got tails.'.format(tails))
 
-print('Human coin results:')
+print('\nPeople who flipped got the following results:')
 print("state     probability")
 print("heads         {0}".format(p_heads))
 print("tails         {0}".format(p_tails))
                        
-print('Quantum coin results:')
-results = combine_results(exp_heads, exp_tails, p_heads, p_tails)
-print("state     probability")
-print("heads         {0}".format(results['0']))
-print("tails         {0}".format(results['1']))
+print('End result from quantum computer after these flips:')
+# results = combine_results(exp_heads, exp_tails, p_heads, p_tails)
+# p_exp_heads = exp_heads['0']/flips
+# p_exp_tails = exp_tails['0']/flips
+print("state         Solution Distribution")
+print("heads         {0}".format((exp_heads['0']+exp_tails['0'])/flips))
+print("tails         0.0")
 
-print('{0} people chose to pass.'.format(passes))
+print('\n{0} people chose to pass.'.format(passes))
 
 exp_heads, exp_tails, heads, tails = run_challenge(passes, flipped=False, device='ibmqx4') #run protocol for each pass
 
 p_heads = heads/(heads+tails)
 p_tails = tails/(heads+tails)
 
-print('Human coin results:')
-print("state     probability")
-print("heads         {0}".format(p_heads))
-print("tails         {0}".format(p_tails))
+# print('Human coin results:')
+# print("state     probability")
+# print("heads         {0}".format(p_heads))
+# print("tails         {0}".format(p_tails))
 
-print('Quantum coin results:')
-print_results(exp_tails)
+print('End result from quantum computer after these passes:')
+print("state         Solution Distribution")
+print("heads         {0}".format(exp_heads['0']/passes))
+print("tails         {0}".format(exp_tails))
+
