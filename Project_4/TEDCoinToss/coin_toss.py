@@ -123,8 +123,15 @@ def run_challenge(trials, flipped, device):
         else:
             heads += 1
 
-    heads_job = execute(heads_circuit, simulator, shots=heads).result().get_counts(heads_circuit)
-    tails_job = execute(tails_circuit, simulator, shots=tails).result().get_counts(tails_circuit)
+    if heads>0:
+        heads_job = execute(heads_circuit, simulator, shots=heads).result().get_counts(heads_circuit)
+    else:
+        heads_job = 0
+
+    if tails>0:
+        tails_job = execute(tails_circuit, simulator, shots=tails).result().get_counts(tails_circuit)
+    else:
+        tails_job = 0
             
     # exp_heads = api.execute(heads_qasm, device, heads)
     # exp_tails = api.execute(tails_qasm, device, tails)
