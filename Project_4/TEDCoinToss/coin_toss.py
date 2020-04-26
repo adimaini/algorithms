@@ -1,8 +1,3 @@
-'''
-A demonstration of a quantum coin toss challenge on the IBM Q
-written by Marcus Edwards on November 20, 2018
-'''
-
 from qiskit import IBMQ, QuantumCircuit, execute, Aer
 from qiskit.providers.ibmq import least_busy
 import csv
@@ -12,13 +7,14 @@ import time
 #  program time tracking
 startTime = time.time()
 
+#  connecting IBM Quantum Experience account
 API_TOKEN = '7f744419bf02c5ad2935c5bad2d858f150f3793da866268cd5c0841bc531c8a72a4484d4c59bf3afa44c29e7859a875cf0634104707aa341424b662acd7c4655'
 print('\n-----------------------------------------------------')
 IBMQ.save_account(API_TOKEN, overwrite=False)
 IBMQ.load_account()
-# each provider has multiple backends
-provider = IBMQ.get_provider(hub='ibm-q', group='open', project='main')
 
+#  backend configuration
+provider = IBMQ.get_provider(hub='ibm-q', group='open', project='main')
 print('\nThese are the backends that are real quantum devices and are currently operational....')
 print(provider.backends(simulator=False, operational=True), '\n')
 print('\nLets pick the least busy backend....')
@@ -62,7 +58,6 @@ def run_challenge(trials, flipped, device):
     '''
     heads = 0
     tails = 0
-
     
     for trial in range(trials):
         if (flipped and random_toss() == True):
@@ -70,26 +65,30 @@ def run_challenge(trials, flipped, device):
         else:
             heads += 1
 
+    heads_time_0 = time.time()
     if heads>0:
         heads_job_results = execute(heads_basis, backend, shots=heads).result()
         heads_job = heads_job_results.get_counts(heads_circuit)
-        print('\nHeads Job results:\n')
-        print( heads_job_results, '\n')
+        print('\nHeads Job results:')
+        print( heads_job_results)
     else:
         heads_job = 0
+    heads_time_1 = float(time.time() - heads_time_0)
 
+    tails_time_0 = time.time()
     if tails>0:
         tails_job_results = execute(tails_basis, backend, shots=tails).result()
         tails_job = tails_job_results.get_counts(tails_circuit)
-        print('\nTails Job results:\n')
-        print(tails_job_results, '\n')
+        print('\nTails Job results:')
+        print(tails_job_results)
     else:
         tails_job = 0
+    tails_time_1 = float(time.time() - tails_time_0)
             
     # exp_heads = api.execute(heads_qasm, device, heads)
     # exp_tails = api.execute(tails_qasm, device, tails)
 
-    return heads_job, tails_job, heads, tails
+    return heads_job, tails_job, heads, tails, heads_time_1, tails_time_1
 
 def get_choices(file):
     flip = 0
@@ -108,13 +107,17 @@ flips, passes = get_choices('flip_choices.csv')
 print('{0} people are playing a game against IBMs quantum computer.'.format(flips + passes))
 print('{0} people chose to flip.'.format(flips))
 
-exp_heads, exp_tails, heads, tails = run_challenge(flips, flipped=True, device='ibmqx4') #run protocol for each flip
+exp_heads, exp_tails, heads, tails, heads_time_1, tails_time_1 = run_challenge(flips, flipped=True, device='ibmqx4') #run protocol for each flip
 print(exp_heads, '\n', exp_tails)
+
+#  adding up API time lengths 
+heads_time_total = heads_time_1
+tails_time_total = tails_time_1
 
 p_heads = heads/(heads+tails)
 p_tails = tails/(heads+tails)
 
-print('{0} people who flipped got heads.'.format(heads))
+print('\n{0} people who flipped got heads.'.format(heads))
 print('{0} people who flipped got tails.'.format(tails))
 
 print('\nPeople who flipped got the following results:')
@@ -129,7 +132,7 @@ print("tails         {0}".format((flips - (exp_heads['0']+exp_tails['0'])) / fli
 
 print('\n{0} people chose to pass.'.format(passes))
 
-exp_heads, exp_tails, heads, tails = run_challenge(passes, flipped=False, device='ibmqx4') #run protocol for each pass
+exp_heads, exp_tails, heads, tails, heads_time_1, tails_time_1  = run_challenge(passes, flipped=False, device='ibmqx4') #run protocol for each pass
 print(exp_heads, '\n', exp_tails)
 
 print('End result after the quantum computer flips after the human passes:')
@@ -137,5 +140,10 @@ print("state         Probability")
 print("heads         {0}".format(exp_heads['0']/passes))
 print("tails         {0}".format((passes-exp_heads['0'])/passes))
 
+#  adding up API time lengths 
+heads_time_total += heads_time_1
+tails_time_total += tails_time_1
+print ('\nTotal heads API call time: ', heads_time_total, 'seconds. \nTotal tails API call time: ', tails_time_total, 'seconds.')
+#  calculating total program time 
 print('Program time is {:f}'.format(float(time.time()-startTime)), 'seconds')
 
