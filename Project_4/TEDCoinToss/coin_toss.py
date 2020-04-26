@@ -12,7 +12,6 @@ import time
 #  program time tracking
 startTime = time.time()
 
-
 API_TOKEN = '7f744419bf02c5ad2935c5bad2d858f150f3793da866268cd5c0841bc531c8a72a4484d4c59bf3afa44c29e7859a875cf0634104707aa341424b662acd7c4655'
 print('\n-----------------------------------------------------')
 IBMQ.save_account(API_TOKEN, overwrite=False)
@@ -138,5 +137,5 @@ print("state         Probability")
 print("heads         {0}".format(exp_heads['0']/passes))
 print("tails         {0}".format((passes-exp_heads['0'])/passes))
 
-print('Program time is %.2f'.format(time.time()-startTime))
+print('Program time is {:f}'.format(float(time.time()-startTime)), 'seconds')
 
