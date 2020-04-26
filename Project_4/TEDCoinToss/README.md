@@ -3,5 +3,4 @@ A quantum coin toss demonstration for Dr. Shohini Ghose's TED presentation in 20
 
 
 4/25/2020 
-
 Changes to the original code to update the endpoints to IBM Quantum Experience, and clarify the logic behind the coin toss game. 
