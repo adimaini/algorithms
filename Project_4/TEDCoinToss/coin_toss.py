@@ -128,7 +128,7 @@ print("tails         {0}".format(p_tails))
 print('End result after the quantum computer flips after the human has flipped:')
 print("state         Probability")
 print("heads         {0}".format((exp_heads['0']+exp_tails['0'])/flips))
-print("tails         {0}".format((exp_heads['1']+exp_tails['1']) / flips))
+print("tails         {0}".format((flips - (exp_heads['0']+exp_tails['0'])) / flips))
 
 print('\n{0} people chose to pass.'.format(passes))
 
@@ -138,7 +138,7 @@ print(exp_heads, '\n', exp_tails)
 print('End result after the quantum computer flips after the human passes:')
 print("state         Probability")
 print("heads         {0}".format(exp_heads['0']/passes))
-print("tails         {0}".format(exp_heads['1']/passes))
+print("tails         {0}".format((passes-exp_heads['0'])/passes))
 
 #  adding up API time lengths 
 heads_time_total += heads_time_1
