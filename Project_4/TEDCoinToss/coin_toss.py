@@ -1,99 +1,42 @@
-'''
-A demonstration of a quantum coin toss challenge on the IBM Q
-written by Marcus Edwards on November 20, 2018
-'''
-
 from qiskit import IBMQ, QuantumCircuit, execute, Aer
+from qiskit.providers.ibmq import least_busy
 import csv
 import random
+import time
 
+#  program time tracking
+startTime = time.time()
+
+#  connecting IBM Quantum Experience account
 API_TOKEN = '7f744419bf02c5ad2935c5bad2d858f150f3793da866268cd5c0841bc531c8a72a4484d4c59bf3afa44c29e7859a875cf0634104707aa341424b662acd7c4655'
-# heads_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nx q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
-# tails_qasm = "IBMQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\ncreg c[1];\nh q[0];\nh q[0];\nmeasure q[0] -> c[0];\n"
+print('\n-----------------------------------------------------')
+IBMQ.save_account(API_TOKEN, overwrite=False)
+IBMQ.load_account()
 
-simulator = Aer.get_backend('qasm_simulator')
+#  backend configuration
+provider = IBMQ.get_provider(hub='ibm-q', group='open', project='main')
+print('\nThese are the backends that are real quantum devices and are currently operational....')
+print(provider.backends(simulator=False, operational=True), '\n')
+print('\nLets pick the least busy backend....')
+backend = least_busy(provider.backends(simulator=False, operational=True))
+print('Backend being used:', backend, ', which has the following available basis gates:')
+print(backend.configuration().basis_gates, '\n')
+
+# Quantum circuit configuration
 heads_circuit = QuantumCircuit(1,1)
 tails_circuit = QuantumCircuit(1,1)
-
 #  heads circuit config
 heads_circuit.h(0)
-heads_circuit.x(0)
 heads_circuit.h(0)
 heads_circuit.measure(range(1), range(1))
-
 #  tails circuit config
 tails_circuit.h(0)
+tails_circuit.x(0)
 tails_circuit.h(0)
 tails_circuit.measure(range(1), range(1))
-
-
-
-# heads_result = heads_job.result()
-# tails_result = tails_job.result()
-
-# def test_api_auth_token():
-#     '''
-#     Authentication with Quantum Experience Platform
-#     '''
-#     api = IBMQ.enable_account(API_TOKEN)
-#     credential = api.check_credentials()
-
-#     return credential
-
-# def connect():
-#     '''
-#     Attempt to connect to the Quantum Experience Platform
-#     ''' 
-#     connection_success = test_api_auth_token()
-
-#     if(connection_success == True):
-#         print("API auth success.")
-#     else:
-#         print("API auth failure.")
-#         exit()
-
-def print_results(exp):
-    '''
-    Print the distribution of measured results from the given experiment
-    '''
-    print("state     probability")
-    for i in range(len(exp['result']['measure']['labels'])):
-        if exp['result']['measure']['labels'][i] == '0':
-            label = 'heads'
-        else:
-            label = 'tails'
-        print("{0}         {1}".format(label ,exp['result']['measure']['values'][i]))    
-
-    return
-
-def combine_results(heads_exp, tails_exp, head_bias, tail_bias):
-    '''
-    Combine the distributions of measured results from the given experiments
-    '''
-    results = {}
-    for i in range(len(heads_exp['result']['measure']['labels'])):
-        state = heads_exp['result']['measure']['labels'][i]
-        if (state == '0'):
-            bias = head_bias 
-        else: 
-            bias = tail_bias
-        if state in results:
-            results[state] += heads_exp['result']['measure']['values'][i] * bias
-        else:
-            results[state] = heads_exp['result']['measure']['values'][i] * bias
-            
-    for j in range(len(tails_exp['result']['measure']['labels'])):
-        state = tails_exp['result']['measure']['labels'][i]
-        if (state == '0'):
-            bias = head_bias 
-        else: 
-            bias = tail_bias
-        if state in results:
-            results[state] += tails_exp['result']['measure']['values'][i] * bias
-        else:
-            results[state] = tails_exp['result']['measure']['values'][i] * bias
-
-    return results
+#  decompose our original quantum circuits to quantum computer backend's basis
+heads_basis = heads_circuit.decompose()
+tails_basis = tails_circuit.decompose()
 
 def random_toss():
     return (random.uniform(0, 1) > 0.5)
@@ -115,7 +58,6 @@ def run_challenge(trials, flipped, device):
     '''
     heads = 0
     tails = 0
-    # api = IBMQ.load_account(API_TOKEN)
     
     for trial in range(trials):
         if (flipped and random_toss() == True):
@@ -123,20 +65,30 @@ def run_challenge(trials, flipped, device):
         else:
             heads += 1
 
+    heads_time_0 = time.time()
     if heads>0:
-        heads_job = execute(heads_circuit, simulator, shots=heads).result().get_counts(heads_circuit)
+        heads_job_results = execute(heads_basis, backend, shots=heads).result()
+        heads_job = heads_job_results.get_counts(heads_circuit)
+        print('\nHeads Job results:')
+        print( heads_job_results)
     else:
         heads_job = 0
+    heads_time_1 = float(time.time() - heads_time_0)
 
+    tails_time_0 = time.time()
     if tails>0:
-        tails_job = execute(tails_circuit, simulator, shots=tails).result().get_counts(tails_circuit)
+        tails_job_results = execute(tails_basis, backend, shots=tails).result()
+        tails_job = tails_job_results.get_counts(tails_circuit)
+        print('\nTails Job results:')
+        print(tails_job_results)
     else:
         tails_job = 0
+    tails_time_1 = float(time.time() - tails_time_0)
             
     # exp_heads = api.execute(heads_qasm, device, heads)
     # exp_tails = api.execute(tails_qasm, device, tails)
 
-    return heads_job, tails_job, heads, tails
+    return heads_job, tails_job, heads, tails, heads_time_1, tails_time_1
 
 def get_choices(file):
     flip = 0
@@ -149,51 +101,49 @@ def get_choices(file):
             elif 'Square' in row[0]:
                 dont_flip += 1
     return flip, dont_flip
-    
-# connect() #connect to IBM Q
 
 flips, passes = get_choices('flip_choices.csv')
 
 print('{0} people are playing a game against IBMs quantum computer.'.format(flips + passes))
 print('{0} people chose to flip.'.format(flips))
 
-exp_heads, exp_tails, heads, tails = run_challenge(flips, flipped=True, device='ibmqx4') #run protocol for each flip
+exp_heads, exp_tails, heads, tails, heads_time_1, tails_time_1 = run_challenge(flips, flipped=True, device='ibmqx4') #run protocol for each flip
+print(exp_heads, '\n', exp_tails)
 
-# print(exp_heads, '\n\n', exp_tails)
+#  adding up API time lengths 
+heads_time_total = heads_time_1
+tails_time_total = tails_time_1
 
 p_heads = heads/(heads+tails)
 p_tails = tails/(heads+tails)
 
-print('{0} people who flipped got heads.'.format(heads))
+print('\n{0} people who flipped got heads.'.format(heads))
 print('{0} people who flipped got tails.'.format(tails))
 
 print('\nPeople who flipped got the following results:')
-print("state     probability")
+print("state         Probability")
 print("heads         {0}".format(p_heads))
 print("tails         {0}".format(p_tails))
-                       
-print('End result from quantum computer after these flips:')
-# results = combine_results(exp_heads, exp_tails, p_heads, p_tails)
-# p_exp_heads = exp_heads['0']/flips
-# p_exp_tails = exp_tails['0']/flips
-print("state         Solution Distribution")
+                  
+print('End result after the quantum computer flips after the human has flipped:')
+print("state         Probability")
 print("heads         {0}".format((exp_heads['0']+exp_tails['0'])/flips))
-print("tails         0.0")
+print("tails         {0}".format((flips - (exp_heads['0']+exp_tails['0'])) / flips))
 
 print('\n{0} people chose to pass.'.format(passes))
 
-exp_heads, exp_tails, heads, tails = run_challenge(passes, flipped=False, device='ibmqx4') #run protocol for each pass
+exp_heads, exp_tails, heads, tails, heads_time_1, tails_time_1  = run_challenge(passes, flipped=False, device='ibmqx4') #run protocol for each pass
+print(exp_heads, '\n', exp_tails)
 
-p_heads = heads/(heads+tails)
-p_tails = tails/(heads+tails)
-
-# print('Human coin results:')
-# print("state     probability")
-# print("heads         {0}".format(p_heads))
-# print("tails         {0}".format(p_tails))
-
-print('End result from quantum computer after these passes:')
-print("state         Solution Distribution")
+print('End result after the quantum computer flips after the human passes:')
+print("state         Probability")
 print("heads         {0}".format(exp_heads['0']/passes))
-print("tails         {0}".format(exp_tails))
+print("tails         {0}".format((passes-exp_heads['0'])/passes))
+
+#  adding up API time lengths 
+heads_time_total += heads_time_1
+tails_time_total += tails_time_1
+print ('\nTotal heads API call time: ', heads_time_total, 'seconds. \nTotal tails API call time: ', tails_time_total, 'seconds.')
+#  calculating total program time 
+print('Program time is {:f}'.format(float(time.time()-startTime)), 'seconds')
 
