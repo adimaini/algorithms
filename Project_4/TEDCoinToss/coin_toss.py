@@ -19,6 +19,7 @@ print('\nThese are the backends that are real quantum devices and are currently 
 print(provider.backends(simulator=False, operational=True), '\n')
 print('\nLets pick the least busy backend....')
 backend = least_busy(provider.backends(simulator=False, operational=True))
+# backend = provider.get_backend('ibmqx2')
 print('Backend being used:', backend, ', which has the following available basis gates:')
 print(backend.configuration().basis_gates, '\n')
 
